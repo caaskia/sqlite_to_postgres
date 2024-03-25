@@ -48,80 +48,54 @@ class PersonFilmWork:
     role: str
     created_at: str
 
+table_dataclass_mapping = {
+    'film_work': FilmWork,
+    'genre': Genre,
+    'genre_film_work': GenreFilmWork,
+    'person': Person,
+    'person_film_work': PersonFilmWork
+}
+
 
 class SQLiteExtractor:
     def __init__(self, connection):
         self.connection = connection
+        self.table_list = self.get_table_list()
 
-    def extract_film_works(self):
+    def get_table_list(self):
         cursor = self.connection.cursor()
-        cursor.execute(
-            "SELECT id, title, description, creation_date, file_path, rating, type, created_at, updated_at FROM film_work")
-        data = cursor.fetchall()
+        # Query to retrieve all table names
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        table_names = cursor.fetchall()
         cursor.close()
-        films = [FilmWork(*row) for row in data]
-        return films
+        # Extracting table names from the result
+        return [name[0] for name in table_names]
 
-    def extract_genres(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT id, name, description, created_at, updated_at FROM genre")
-        data = cursor.fetchall()
-        cursor.close()
-        genres = [Genre(*row) for row in data]
-        return genres
+    def extract_data(self, table_name):
+        dataclass_for_table = table_dataclass_mapping.get(table_name)
 
-    def extract_genre_film_work(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id, film_work_id, genre_id, created_at FROM genre_film_work")
-        data = cursor.fetchall()
-        cursor.close()
-        genre_film_works = [GenreFilmWork(*row) for row in data]
-        return genre_film_works
+        cursor.execute(f"SELECT * FROM {table_name}")
 
-    def extract_persons(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT id, full_name, created_at, updated_at FROM person")
-        data = cursor.fetchall()
-        cursor.close()
-        persons = [Person(*row) for row in data]
-        return persons
+        part_size = 100
+        while True:
+            resp = cursor.fetchmany(part_size)
+            if not resp:
+                break
+            for row in resp:
+                yield dataclass_for_table(*row)
 
-    def extract_person_film_work(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT id, film_work_id, person_id, role, created_at FROM person_film_work")
-        data = cursor.fetchall()
         cursor.close()
-        person_film_works = [PersonFilmWork(*row) for row in data]
-        return person_film_works
 
 
 if __name__ == '__main__':
     with sqlite3.connect('db.sqlite') as sqlite_conn:
         sqlite_extractor = SQLiteExtractor(sqlite_conn)
 
-        films_data = sqlite_extractor.extract_film_works()
-        genres_data = sqlite_extractor.extract_genres()
-        genre_film_works_data = sqlite_extractor.extract_genre_film_work()
-        persons_data = sqlite_extractor.extract_persons()
-        person_film_works_data = sqlite_extractor.extract_person_film_work()
+        for table_name in sqlite_extractor.table_list:
+            print(f"Table: {table_name}")
+            for row in sqlite_extractor.extract_data(table_name):
+                print(row)
 
-        # Example usage
-        print("Films:")
-        for film in films_data:
-            print(film)
 
-        print("\nGenres:")
-        for genre in genres_data:
-            print(genre)
 
-        print("\nGenre Film Works:")
-        for gfw in genre_film_works_data:
-            print(gfw)
-
-        print("\nPersons:")
-        for person in persons_data:
-            print(person)
-
-        print("\nPerson Film Works:")
-        for pfw in person_film_works_data:
-            print(pfw)
