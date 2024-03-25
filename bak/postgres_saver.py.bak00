@@ -1,0 +1,28 @@
+import psycopg2.extras
+from dataclasses import dataclass, asdict, astuple, fields
+
+class PostgresSaver:
+    def __init__(self, pg_conn):
+        self.pg_conn = pg_conn
+
+    def save_all_data(self, data):
+        with self.pg_conn as conn, conn.cursor(
+                cursor_factory=psycopg2.extras.DictCursor
+        ) as cursor:
+
+            # Получаем названия колонок таблицы (полей датакласса)
+            column_names = [field.name for field in fields(data[0])]  # [id, name]
+            column_names_str = ','.join(column_names)  # id, name
+
+            # В зависимости от количества колонок генерируем под них %s.
+            col_count = ', '.join(['%s'] * len(column_names))  # '%s, %s
+
+            bind_values = ','.join(cursor.mogrify(
+                                f"({col_count})",
+                                astuple(item)).decode('utf-8') for item in data
+                                )
+
+            query = (f'INSERT INTO content.temp_table ({column_names_str}) VALUES {bind_values} '
+                     f' ON CONFLICT (id) DO NOTHING'
+                     )
+            cursor.execute(query)
