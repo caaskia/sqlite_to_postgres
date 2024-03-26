@@ -1,5 +1,5 @@
 from dataclasses import dataclass, astuple
-from typing import Generator
+from typing import Generator, Tuple, Type
 from models import table_dataclass_mapping, find_table_name
 
 
@@ -45,4 +45,48 @@ class PostgresSaver:
             f'{",".join(mogrified_values)} '
             f'ON CONFLICT (id) DO NOTHING'
         )
-        cursor.execute(query)
+        try:
+            cursor.execute(query)
+        except Exception as e:
+            print(f"Error: {e}")
+            print(f"Query: {query}")
+
+class PostgresExtractor:
+    def __init__(self, pg_conn):
+        self.pg_conn = pg_conn
+
+    def extract_data(self, table_name: str) -> Generator[Type[dataclass], None, None]:
+        if table_name not in table_dataclass_mapping:
+            raise ValueError(f"Table '{table_name}' not found in mapping")
+
+        dataclass_for_table = table_dataclass_mapping[table_name]
+
+        with self.pg_conn.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM content.{table_name}")
+
+            part_size = 100
+            while True:
+                resp = cursor.fetchmany(part_size)
+                if not resp:
+                    break
+                for row in resp:
+                    yield dataclass_for_table(*row)
+
+
+
+    def extract_row_data(self, table_name: str) -> Generator[Tuple, None, None]:
+        with self.pg_conn.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM content.{table_name}")
+            while True:
+                row = cursor.fetchone()
+                if row is None:
+                    break
+                yield row
+
+    def get_row_count(self, table_name):
+        with self.pg_conn.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM content.{table_name}")
+            count = cursor.fetchone()[0]
+        return count
+
+

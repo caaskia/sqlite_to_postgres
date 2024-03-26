@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generator, Type
+from typing import Generator, Type, Tuple
 import sqlite3
 from models import table_dataclass_mapping, find_table_name
 
@@ -39,6 +39,24 @@ class SQLiteExtractor:
             print(f"Table: {table_name}")
             for row in self.extract_data(table_name):
                 yield row
+
+
+    def get_row_count(self, table_name):
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        return count
+
+    def extract_row_data(self, table_name: str) -> Generator[Tuple, None, None]:
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}")
+        while True:
+            row = cursor.fetchone()
+            if row is None:
+                break
+            yield row
+        cursor.close()
 
 
 if __name__ == '__main__':
