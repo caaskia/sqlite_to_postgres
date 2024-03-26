@@ -3,8 +3,8 @@ import sqlite3
 import psycopg2
 from load_data import load_from_sqlite
 from sqlite_utils import SQLiteExtractor
-from postgres_utils import PostgresExtractor
-from models import *
+from postgres_extractor import PostgresExtractor
+from sqlite_models import *
 
 from config import dsl
 

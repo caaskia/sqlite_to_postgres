@@ -23,18 +23,18 @@ class Genre:
     modified: Optional[str]
 
 @dataclass
-class GenreFilmWork:
-    id: str
-    film_work_id: str
-    genre_id: str
-    created: str
-
-@dataclass
 class Person:
     id: str
     full_name: str
     created: str
     modified: str
+
+@dataclass
+class GenreFilmWork:
+    id: str
+    film_work_id: str
+    genre_id: str
+    created: str
 
 @dataclass
 class PersonFilmWork:

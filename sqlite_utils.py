@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Generator, Type, Tuple
 import sqlite3
-from models import table_dataclass_mapping, find_table_name
+from sqlite_models import table_dataclass_mapping, find_table_name
 
 class SQLiteExtractor:
     def __init__(self, connection: sqlite3.Connection):
