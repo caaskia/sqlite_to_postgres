@@ -34,11 +34,6 @@ def test_data_integrity(sqlite_conn, pg_conn):
 
         for table_name in table_names:
             # Count rows
-            # sqlite_count = len(list(sqlite_data))
-            # postgres_count = len(list(postgres_data))
-            # assert sqlite_count == postgres_count, f"Integrity check failed for table {table_name}. " \
-            #                                        f"SQLite count: {sqlite_count}, PostgreSQL count: {postgres_count}"
-
             # Получение количества записей из SQLite
             sqlite_count = sqlite_extractor.get_row_count(table_name)
 
