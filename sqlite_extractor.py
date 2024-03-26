@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Generator, Type
 import sqlite3
-from models import table_dataclass_mapping
+from models import table_dataclass_mapping, find_table_name
 
 class SQLiteExtractor:
     def __init__(self, connection: sqlite3.Connection):
@@ -45,5 +45,13 @@ if __name__ == '__main__':
     with sqlite3.connect('db.sqlite') as sqlite_conn:
         sqlite_extractor = SQLiteExtractor(sqlite_conn)
 
+        last_table_name = None
         for movie in sqlite_extractor.extract_movies():
-            print(movie)
+            # Extract type from movie object
+            movie_type = type(movie)
+            # Find table name for the given dataclass type
+            table_name = find_table_name(table_dataclass_mapping, movie_type)
+            if last_table_name != table_name:
+                # print(f"Table name: {table_name} - Data: {movie}")
+                print(f"Data: {movie}")
+            last_table_name = table_name

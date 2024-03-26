@@ -1,0 +1,34 @@
+from dataclasses import dataclass, astuple, fields
+from typing import Generator, Type
+from models import table_dataclass_mapping, find_table_name
+
+class PostgresSaver:
+    def __init__(self, pg_conn):
+        self.pg_conn = pg_conn
+
+    def save_all_data(self, data: Generator[dataclass, None, None]):
+        try:
+            # with self.pg_conn as conn:
+            with self.pg_conn.cursor() as cursor:
+                # Extract type from the first item in the generator
+                data_type = type(next(data))
+                # Find table name for the given data class type
+                table_name = find_table_name(table_dataclass_mapping, data_type)
+
+                column_names = [field.name for field in data_type.__dataclass_fields__.values()]
+                column_names_str = ','.join(column_names)
+
+                col_count = ','.join(['%s'] * len(column_names))
+                bind_values = ','.join(cursor.mogrify(
+                                    f"({col_count})",
+                                    astuple(item)).decode('utf-8') for item in data
+                                    )
+
+                query = (
+                    f'INSERT INTO {table_name} ({column_names_str}) VALUES {bind_values} '
+                    f' ON CONFLICT (id) DO NOTHING'
+                )
+                cursor.execute(query)
+                self.pg_conn.commit()
+        except Exception as e:
+            print(f"Error: {e}")
