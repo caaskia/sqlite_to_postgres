@@ -3,6 +3,7 @@ from typing import Generator, Type, Tuple
 import sqlite3
 from sqlite_models import table_dataclass_mapping, find_table_name
 
+
 class SQLiteExtractor:
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection
@@ -40,7 +41,6 @@ class SQLiteExtractor:
             for row in self.extract_data(table_name):
                 yield row
 
-
     def get_row_count(self, table_name):
         cursor = self.connection.cursor()
         cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
@@ -59,8 +59,8 @@ class SQLiteExtractor:
         cursor.close()
 
 
-if __name__ == '__main__':
-    with sqlite3.connect('db.sqlite') as sqlite_conn:
+if __name__ == "__main__":
+    with sqlite3.connect("db.sqlite") as sqlite_conn:
         sqlite_extractor = SQLiteExtractor(sqlite_conn)
 
         last_table_name = None

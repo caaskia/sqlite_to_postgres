@@ -7,6 +7,7 @@ from typing import Generator, Tuple, Type
 
 from postgresql_models import postgresql_data_mapping
 
+
 class PostgresExtractor:
     def __init__(self, pg_conn):
         self.pg_conn = pg_conn
@@ -28,8 +29,6 @@ class PostgresExtractor:
                 for row in resp:
                     yield dataclass_for_table(*row)
 
-
-
     def extract_row_data(self, table_name: str) -> Generator[Tuple, None, None]:
         with self.pg_conn.cursor() as cursor:
             cursor.execute(f"SELECT * FROM content.{table_name}")
@@ -46,10 +45,15 @@ class PostgresExtractor:
         return count
 
 
-
-if __name__ == '__main__':
-    with (psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn):
-        table_names = ['genre', 'person', 'genre_film_work', 'person_film_work', 'film_work']
+if __name__ == "__main__":
+    with psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn:
+        table_names = [
+            "genre",
+            "person",
+            "genre_film_work",
+            "person_film_work",
+            "film_work",
+        ]
         postgres_extractor = PostgresExtractor(pg_conn)
         for table_name in table_names:
             print(f"Table: {table_name}")

@@ -33,23 +33,24 @@ class PostgresSaver:
         if not batch:
             return
 
-        column_names = [field.name for field in batch[0].__class__.__dataclass_fields__.values()]
-        column_names_str = ','.join(column_names)
-        col_count = ','.join(['%s'] * len(column_names))
+        column_names = [
+            field.name for field in batch[0].__class__.__dataclass_fields__.values()
+        ]
+        column_names_str = ",".join(column_names)
+        col_count = ",".join(["%s"] * len(column_names))
 
         values = [astuple(item) for item in batch]
-        mogrified_values = [cursor.mogrify(f"({col_count})", value).decode('utf-8') for value in values]
+        mogrified_values = [
+            cursor.mogrify(f"({col_count})", value).decode("utf-8") for value in values
+        ]
 
         query = (
-            f'INSERT INTO content.{table_name} ({column_names_str}) VALUES '
+            f"INSERT INTO content.{table_name} ({column_names_str}) VALUES "
             f'{",".join(mogrified_values)} '
-            f'ON CONFLICT (id) DO NOTHING'
+            f"ON CONFLICT (id) DO NOTHING"
         )
         try:
             cursor.execute(query)
         except Exception as e:
             print(f"Error: {e}")
             print(f"Query: {query}")
-
-
-
