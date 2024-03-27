@@ -15,6 +15,7 @@ table_names = [
     "person_film_work",
 ]
 
+
 @pytest.fixture(scope="module")
 def sqlite_conn():
     conn = sqlite3.connect("../db.sqlite")
@@ -30,6 +31,7 @@ def pg_conn():
 
 
 def test_data_integrity(sqlite_conn, pg_conn):
+    """Check data integrity between SQLite and PostgreSQL"""
 
     with sqlite_conn, pg_conn:
         sqlite_extractor = SQLiteExtractor(sqlite_conn)
@@ -49,7 +51,9 @@ def test_data_integrity(sqlite_conn, pg_conn):
                 f"SQLite count: {sqlite_count}, PostgreSQL count: {postgres_count}"
             )
 
+
 def test_check_contents(sqlite_conn, pg_conn):
+    """Check contents of records in each table"""
 
     with sqlite_conn, pg_conn:
         sqlite_extractor = SQLiteExtractor(sqlite_conn)
@@ -62,7 +66,9 @@ def test_check_contents(sqlite_conn, pg_conn):
             # Проверка содержимого записей внутри каждой таблицы.
             # Проверrка, что все записи из PostgreSQL присутствуют с такими же значениями полей, как и в SQLite.
             for sqlite_record in sqlite_data:
-                postgres_record = postgres_extractor.get_record_by_id(table_name, sqlite_record.id)
+                postgres_record = postgres_extractor.get_record_by_id(
+                    table_name, sqlite_record.id
+                )
 
                 # Создаем словарь для хранения значений sqlite_record
                 sqlite_values = {}
@@ -70,13 +76,22 @@ def test_check_contents(sqlite_conn, pg_conn):
                 # Обходим поля sqlite_record
                 for name_field, value_field in sqlite_record.__dict__.items():
                     # Если поле является 'created', 'modified' и имеет тип str, то преобразуем его в datetime
-                    if name_field in ('created', 'modified') and isinstance(value_field, str):
+                    if name_field in ("created", "modified") and isinstance(
+                        value_field, str
+                    ):
                         try:
                             # Используем регулярное выражение для разбора временной зоны
-                            dt_str, tz_str = value_field.rsplit('+', 1)
-                            dt = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S.%f')
-                            tz = timezone.utc if tz_str == '00' else timezone(
-                                datetime.timedelta(hours=int(tz_str[:2]), minutes=int(tz_str[2:])))
+                            dt_str, tz_str = value_field.rsplit("+", 1)
+                            dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S.%f")
+                            tz = (
+                                timezone.utc
+                                if tz_str == "00"
+                                else timezone(
+                                    datetime.timedelta(
+                                        hours=int(tz_str[:2]), minutes=int(tz_str[2:])
+                                    )
+                                )
+                            )
                             value_field = dt.replace(tzinfo=tz)
                         except Exception as e:
                             print(f"Ошибка при разборе временной зоны: {e}")
@@ -87,5 +102,6 @@ def test_check_contents(sqlite_conn, pg_conn):
                 for name_field, value_field in sqlite_values.items():
                     # Проверяем, существует ли соответствующее поле в postgres_record и сравниваем значения
                     if name_field in postgres_record.__dict__:
-                        assert value_field == getattr(postgres_record,
-                                                      name_field), f"Значения поля {name_field} не совпадают."
+                        assert value_field == getattr(
+                            postgres_record, name_field
+                        ), f"Значения поля {name_field} не совпадают."
