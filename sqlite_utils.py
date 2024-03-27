@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from typing import Generator, Type, Tuple
 import sqlite3
+
 from sqlite_models import sqlite_dataclass_mapping, find_table_name
+from config import table_names
 
 
 class SQLiteExtractor:
     '''Class for extracting data from SQLite'''
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection
-        self.table_list = self.get_table_list()
+        # Так как имеет значение порядок таблиц (ForeignKey), то используем table_names из config.py
+        # при полной автоматизации мы можем использовать self.table_list = self.get_table_list()
+        self.table_list = table_names
 
     def get_table_list(self) -> list:
         '''Get list of tables from SQLite'''
@@ -76,6 +80,5 @@ if __name__ == "__main__":
             # Find table name for the given dataclass type
             table_name = find_table_name(sqlite_dataclass_mapping, movie_type)
             if last_table_name != table_name:
-                # print(f"Table name: {table_name} - Data: {movie}")
                 print(f"Data: {movie}")
             last_table_name = table_name

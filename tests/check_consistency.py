@@ -5,15 +5,7 @@ from sqlite_utils import SQLiteExtractor
 from postgres_utils import PostgresExtractor
 from datetime import datetime, timezone
 
-from config import dsl
-
-table_names = [
-    "genre",
-    "person",
-    "film_work",
-    "genre_film_work",
-    "person_film_work",
-]
+from config import dsl, table_names
 
 
 @pytest.fixture(scope="module")
