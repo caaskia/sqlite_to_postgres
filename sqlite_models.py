@@ -52,7 +52,7 @@ class PersonFilmWork:
     created: str
 
 
-table_dataclass_mapping = {
+sqlite_dataclass_mapping = {
     "film_work": FilmWork,
     "genre": Genre,
     "genre_film_work": GenreFilmWork,
@@ -63,7 +63,7 @@ table_dataclass_mapping = {
 
 def find_table_name(table_dataclass_mapping, data_type):
     """
-    # Find corresponding table name for the given dataclass type
+    Find corresponding table name for the given dataclass type
     """
     for table_name, dataclass_type in table_dataclass_mapping.items():
         if dataclass_type == data_type:
