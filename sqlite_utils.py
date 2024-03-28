@@ -16,10 +16,9 @@ class SQLiteExtractor:
 
     def get_table_list(self) -> list:
         '''Get list of tables from SQLite'''
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        table_names = cursor.fetchall()
-        cursor.close()
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            table_names = cursor.fetchall()
         return [name[0] for name in table_names]
 
     def extract_data(self, table_name: str) -> Generator[Type[dataclass], None, None]:
@@ -29,18 +28,17 @@ class SQLiteExtractor:
 
         dataclass_for_table = sqlite_dataclass_mapping[table_name]
 
-        cursor = self.connection.cursor()
-        cursor.execute(f"SELECT * FROM {table_name}")
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {table_name}")
 
-        part_size = 100
-        while True:
-            resp = cursor.fetchmany(part_size)
-            if not resp:
-                break
-            for row in resp:
-                yield dataclass_for_table(*row)
+            part_size = 100
+            while True:
+                resp = cursor.fetchmany(part_size)
+                if not resp:
+                    break
+                for row in resp:
+                    yield dataclass_for_table(*row)
 
-        cursor.close()
 
     def extract_movies(self) -> Generator[Type[dataclass], None, None]:
         '''Extract movies from all tables'''
@@ -51,22 +49,20 @@ class SQLiteExtractor:
 
     def get_row_count(self, table_name):
         '''Get row count from table'''
-        cursor = self.connection.cursor()
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        count = cursor.fetchone()[0]
-        cursor.close()
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            count = cursor.fetchone()[0]
         return count
 
     def extract_row_data(self, table_name: str) -> Generator[Tuple, None, None]:
         '''Extract row data from table'''
-        cursor = self.connection.cursor()
-        cursor.execute(f"SELECT * FROM {table_name}")
-        while True:
-            row = cursor.fetchone()
-            if row is None:
-                break
-            yield row
-        cursor.close()
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {table_name}")
+            while True:
+                row = cursor.fetchone()
+                if row is None:
+                    break
+                yield row
 
 
 if __name__ == "__main__":
