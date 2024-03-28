@@ -4,6 +4,9 @@ from typing import Generator
 from postgresql_models import postgresql_data_mapping
 from sqlite_models import sqlite_dataclass_mapping, find_table_name
 
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(module)s - %(message)s")
+
 
 class PostgresSaver:
     '''Class for saving data to PostgreSQL'''
@@ -31,7 +34,7 @@ class PostgresSaver:
 
                 self.pg_conn.commit()
         except Exception as e:
-            print(f"Error: {e}")
+            logging.error(f"Error: {e}")
 
     def insert_batch(self, cursor, table_name, batch):
         '''Insert batch of data to PostgreSQL'''
@@ -57,8 +60,8 @@ class PostgresSaver:
         try:
             cursor.execute(query)
         except Exception as e:
-            print(f"Error: {e}")
-            print(f"Query: {query}")
+            logging.error(f"Error: {e}")
+            logging.error(f"Query: {query}")
 
 class PostgresExtractor:
     '''Class for extracting data from PostgreSQL'''
