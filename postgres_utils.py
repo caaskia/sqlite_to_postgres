@@ -83,7 +83,16 @@ class PostgresExtractor:
 
         postgresql_data_class = postgresql_data_mapping[table_name]
         with self.pg_conn.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM content.{table_name} WHERE id = %s", (id,))
+            # Retrieve the fields of the data class
+            fields = [f.name for f in postgresql_data_class.__dataclass_fields__.values()]
+
+            # Construct the SQL query string dynamically
+            fields_str = ', '.join(fields)
+            query = f"SELECT {fields_str} FROM content.{table_name} WHERE id = %s"
+
+            # Execute the SQL query
+            cursor.execute(query, (id,))
+
             record = cursor.fetchone()
             data_record = postgresql_data_class(*record)
         return data_record
